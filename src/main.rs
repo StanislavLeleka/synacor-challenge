@@ -23,15 +23,19 @@ impl Cpu {
         }
     }
 
-    fn read_memory(&self, address: usize) -> u16 {
-        match address {
-            0 ..=32768 => self.memory[address],
+    fn read_memory(&mut self) -> u16 {
+        match self.pc {
+            0 ..=32768 => { 
+                let val = self.memory[self.pc as usize];
+                self.pc += 1;
+                val
+            },
             _ => panic!()
         }
     }
 
     fn emulate_instruction(&mut self) -> io::Result<()>  {
-        let instr = self.read_memory(self.pc as usize);
+        let instr = self.read_memory();
         let op = Opcodes::from_u16(instr);
         match op {
             Opcodes::OpHalt => process::exit(1),
@@ -54,14 +58,12 @@ impl Cpu {
             Opcodes::OpCall => todo!(),
             Opcodes::OpRet => todo!(),
             Opcodes::OpOut => {
-                self.pc += 1;
-                let code = self.read_memory(self.pc as usize).to_le_bytes();
+                let code = self.read_memory().to_le_bytes();
                 let str = match std::str::from_utf8(&code){
                     Ok(val) => val,
                     Err(_) => "",
                 };
                 print!("{}", str);
-                self.pc += 1;
             },
             Opcodes::OpIn => todo!(),
             Opcodes::OpNoop => { 
