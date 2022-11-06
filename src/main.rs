@@ -44,10 +44,31 @@ impl Cpu {
         let op = Opcodes::from_u16(instr);
         match op {
             Opcodes::OpHalt => process::exit(1),
-            Opcodes::OpSet => todo!(),
+            Opcodes::OpSet => {
+                let reg = self.read_memory() % 32768;
+                self.reg[reg as usize] = self.read_memory();
+            }
             Opcodes::OpPush => todo!(),
             Opcodes::OpPop => todo!(),
-            Opcodes::OpEq => todo!(),
+            Opcodes::OpEq => {
+                let a = self.read_memory();
+                let b = self.read_memory();
+                let c = self.read_memory();
+                if a > 32767 {
+                    let reg = a % 32768;
+                    if b == c {
+                        self.reg[reg as usize] = 1;
+                    } else {
+                        self.reg[reg as usize] = 0;
+                    }
+                } else {
+                    if b == c {
+                        self.memory[a as usize] = 1;
+                    } else {
+                        self.memory[a as usize] = 0;
+                    }
+                }
+            }
             Opcodes::OpGt => todo!(),
             Opcodes::OpJmp => {
                 self.pc = self.read_memory();
@@ -55,18 +76,42 @@ impl Cpu {
             Opcodes::OpJt => {
                 let a = self.read_memory();
                 let b = self.read_memory();
-                if a != 0 {
-                    self.pc = b;
+                if a > 32767 {
+                    let reg = a % 32768;
+                    if self.reg[reg as usize] != 0 {
+                        self.pc = b;
+                    }
+                } else {
+                    if a != 0 {
+                        self.pc = b;
+                    }
                 }
             }
             Opcodes::OpJf => {
                 let a = self.read_memory();
                 let b = self.read_memory();
-                if a == 0 {
-                    self.pc = b;
+                if a > 32767 {
+                    let reg = a % 32768;
+                    if self.reg[reg as usize] == 0 {
+                        self.pc = b;
+                    }
+                } else {
+                    if a == 0 {
+                        self.pc = b;
+                    }
                 }
             }
-            Opcodes::OpAdd => todo!(),
+            Opcodes::OpAdd => {
+                let a = self.read_memory();
+                let b = self.read_memory();
+                let c = self.read_memory();
+                if a > 32767 {
+                    let reg = a % 32768;
+                    self.reg[reg as usize] = (b + c) % 32768;
+                } else {
+                    self.memory[a as usize] = (b + c) % 32768;
+                }
+            }
             Opcodes::OpMult => todo!(),
             Opcodes::OpMod => todo!(),
             Opcodes::OpAnd => todo!(),
